@@ -1,78 +1,56 @@
-// netlify/functions/notifyOnComplaintInsert.js
-const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID;
-const ONESIGNAL_REST_KEY = process.env.ONESIGNAL_REST_KEY;
+// netlify/functions/sendNotification.js
 
 exports.handler = async (event) => {
-  // التحقق من طريقة الطلب
   if (event.httpMethod !== "POST") {
-    return {
-      statusCode: 405,
-      body: JSON.stringify({ error: "Method Not Allowed" })
-    };
+    return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  // التحقق من وجود المفاتيح
-  if (!ONESIGNAL_REST_KEY || !ONESIGNAL_APP_ID) {
-    console.error("❌ Missing OneSignal credentials in Netlify env");
+  const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID;
+  const ONESIGNAL_REST_KEY = process.env.ONESIGNAL_REST_KEY;
+
+  if (!ONESIGNAL_APP_ID || !ONESIGNAL_REST_KEY) {
+    console.error("❌ Missing OneSignal environment variables");
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Server misconfiguration: missing OneSignal keys" })
+      body: JSON.stringify({ error: "Server misconfiguration" }),
     };
   }
 
   try {
-    // تحليل الجسم
-    const body = JSON.parse(event.body || "{}");
-    const complaint = body.record; // Supabase Webhook يُرسل السجل تحت "record"
+    const { title, message, imageUrl } = JSON.parse(event.body || "{}");
 
-    if (!complaint) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: "Missing 'record' in payload" })
-      };
-    }
-
-    // ✅ ترميز المفتاح بشكل صحيح لـ Basic Auth
-    const auth = Buffer.from(`:${ONESIGNAL_REST_KEY}`).toString("base64");
-
-    // إعداد حمولة OneSignal
     const payload = {
       app_id: ONESIGNAL_APP_ID,
-      included_segments: ["Subscribed Users"], // ← لا تستخدم "All"
-      headings: { ar: "شكوى جديدة!" },
-      contents: {
-        ar: `من: ${complaint.customer_name || "عميل"} - ${complaint.customer_phone || ""}`
-      },
-      url: "https://admin-complants-calamari.netlify.app/"
+      included_segments: ["All"], // 📢 إرسال لكل المشتركين
+      headings: { en: title || "إشعار جديد" },
+      contents: { en: message || "لا يوجد محتوى" },
+      chrome_web_image: imageUrl || undefined,
     };
 
-    // إرسال الطلب إلى OneSignal
     const response = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Basic ${auth}` // ← هذا هو التنسيق الصحيح
+        Authorization: `Basic ${ONESIGNAL_REST_KEY}`,
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     const result = await response.json();
 
-    // تسجيل الخطأ في السجلات إن وُجد
-    if (!response.ok) {
-      console.error("OneSignal API error:", result);
-    }
-
     return {
-      statusCode: response.status,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify(result)
+      statusCode: response.ok ? 200 : 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+      body: JSON.stringify(result),
     };
-  } catch (err) {
-    console.error("Function error:", err.message);
+  } catch (error) {
+    console.error("❌ Function error:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Internal server error" })
+      body: JSON.stringify({ error: error.message }),
     };
   }
 };
