@@ -1,7 +1,7 @@
 {
-  "name": "نظام إدارة الشكاوى - calamari",
-  "short_name": "شكاوى Calamari",
-  "description": "نظام إدارة وتتبع الشكاوى لمطاعم calamari",
+  "name": "نظام إدارة الشكاوى - future",
+  "short_name": "شكاوى future",
+  "description": "نظام إدارة وتتبع الشكاوى لمطاعم future",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",
@@ -22,4 +22,5 @@
   "categories": ["business", "productivity"],
   "lang": "ar",
   "dir": "rtl"
+
 }
