@@ -681,11 +681,11 @@
   <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="config.js"></script>
   <script>
     // ======== Supabase الإعدادات ========
-    const SUPABASE_URL = "https://mehycwkqiwaeumauaanh.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1laHljd2txaXdhZXVtYXVhYW5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTQ5NTIsImV4cCI6MjA3ODY5MDk1Mn0.IJTtLNRhXsasaw-d8j_kIjKbZRTcvlM5f8zCzDEXGUA";
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { supabaseUrl, supabaseKey } = getSupabaseConfig();
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     // ======== متغيرات التطبيق ========
     const totalComplaintsEl = document.getElementById('totalComplaints');
